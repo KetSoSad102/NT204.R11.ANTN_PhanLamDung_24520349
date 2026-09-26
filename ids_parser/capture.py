@@ -31,6 +31,7 @@ def iter_pcap(pcap_path: str | Path) -> Iterator[CapturedPacket]:
 def iter_live(
     interface: str,
     count: Optional[int] = None,
+    bpf_filter: str | None = None,
 ) -> Iterator[CapturedPacket]:
     """
     Capture packets from a live network interface.
@@ -47,6 +48,7 @@ def iter_live(
         iface=interface,
         prn=on_packet,
         store=False,
+        filter=bpf_filter,
     )
 
     sniffer.start()
@@ -77,6 +79,7 @@ def iter_packets(
     pcap: str | Path | None = None,
     interface: str | None = None,
     count: int | None = None,
+    bpf_filter: str | None = None,
 ) -> Iterator[CapturedPacket]:
     """
     Common packet source interface.
@@ -98,4 +101,8 @@ def iter_packets(
         yield from iter_pcap(pcap)
         return
 
-    yield from iter_live(interface, count=count)
+    yield from iter_live(
+        interface,
+        count=count,
+        bpf_filter=bpf_filter,
+    )

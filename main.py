@@ -126,6 +126,7 @@ def run_pipeline(
     interface: str | None,
     output: str,
     count: int | None,
+    bpf_filter: str | None,
 ) -> None:
     """
     Capture packets, parse them and write normalized IDS
@@ -142,6 +143,7 @@ def run_pipeline(
             pcap=pcap,
             interface=interface,
             count=count,
+            bpf_filter=bpf_filter,
         ):
             packet_count += 1
 
@@ -197,6 +199,13 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Maximum number of packets to process",
     )
 
+    parser.add_argument(
+        "--filter",
+        dest="bpf_filter",
+        default=None,
+        help="Optional BPF capture filter for live traffic",
+    )
+
     return parser
 
 
@@ -209,6 +218,7 @@ def main() -> None:
         interface=args.interface,
         output=args.output,
         count=args.count,
+        bpf_filter=args.bpf_filter,
     )
 
 
