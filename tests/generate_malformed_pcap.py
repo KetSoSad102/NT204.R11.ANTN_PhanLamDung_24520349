@@ -4,7 +4,7 @@ from scapy.all import Ether, Raw, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/malformed.pcap")
+    output = Path("TEST/pcap/malformed.pcap")
 
     packets = [
         Ether(

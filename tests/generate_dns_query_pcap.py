@@ -4,7 +4,7 @@ from scapy.all import DNS, DNSQR, IP, UDP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/dns_query.pcap")
+    output = Path("TEST/pcap/dns_query.pcap")
 
     packet = (
         IP(

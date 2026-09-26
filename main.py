@@ -188,7 +188,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--output",
-        default="output/events.jsonl",
+        default="TEST/result/events.jsonl",
         help="Output JSON Lines file",
     )
 

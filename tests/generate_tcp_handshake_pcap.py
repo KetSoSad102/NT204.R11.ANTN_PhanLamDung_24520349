@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/tcp_handshake.pcap")
+    output = Path("TEST/pcap/tcp_handshake.pcap")
 
     client_ip = "10.0.0.10"
     server_ip = "10.0.0.20"

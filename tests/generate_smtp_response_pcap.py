@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/smtp_response.pcap")
+    output = Path("TEST/pcap/smtp_response.pcap")
 
     packets = [
         (

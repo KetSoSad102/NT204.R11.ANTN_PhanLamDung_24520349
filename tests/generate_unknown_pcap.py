@@ -4,7 +4,7 @@ from scapy.all import ICMP, IP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/unknown_protocol.pcap")
+    output = Path("TEST/pcap/unknown_protocol.pcap")
 
     packet = (
         IP(

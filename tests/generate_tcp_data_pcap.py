@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/tcp_data.pcap")
+    output = Path("TEST/pcap/tcp_data.pcap")
 
     payload = b"Hello IDS TCP payload"
 
