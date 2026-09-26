@@ -1,0 +1,1 @@
+{"packet_id": 1, "timestamp": 1790436483.641933, "src_ip": "10.0.0.10", "dst_ip": "10.0.0.20", "network_protocol": "IPv4", "transport_protocol": null, "src_port": null, "dst_port": null, "tcp_flags": null, "application_protocol": "UNKNOWN", "application_data": {}, "payload_b64": null, "parser_status": "unsupported transport protocol"}
