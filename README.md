@@ -124,7 +124,7 @@ Ví dụ:
 
 ```bash
 python main.py \
-    --pcap TEST/http_requests.pcap \
+    --pcap TEST/pcap/http_requests.pcap \
     --output TEST/result/events.jsonl
 ```
 
