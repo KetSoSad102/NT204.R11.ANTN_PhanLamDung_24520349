@@ -12,6 +12,7 @@ from ids_parser.models import NormalizedEvent
 from ids_parser.normalizer import normalize_event
 from ids_parser.parser import parse_ipv4, parse_tcp, parse_udp
 from ids_parser.protocols import detect_application_protocol
+from ids_parser.dns_parser import parse_dns
 
 
 def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
@@ -94,6 +95,11 @@ def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
     if application_protocol == "HTTP":
         try:
             application_data = parse_http(payload)
+        except ValueError as exc:
+            parser_status = f"application parse error: {exc}"
+    elif application_protocol == "DNS":
+        try:
+            application_data = parse_dns(payload)
         except ValueError as exc:
             parser_status = f"application parse error: {exc}"
 
