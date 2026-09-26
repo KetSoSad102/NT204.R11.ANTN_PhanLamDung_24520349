@@ -1,0 +1,1 @@
+{"packet_id": 1, "timestamp": 1790439200.164193, "src_ip": "10.0.0.10", "dst_ip": "10.0.0.20", "network_protocol": "IPv4", "transport_protocol": "UDP", "src_port": 40000, "dst_port": 9999, "tcp_flags": null, "application_protocol": "UNKNOWN", "application_data": {}, "payload_b64": "SGVsbG8gSURTIFVEUCBwYXlsb2Fk", "parser_status": "ok"}
