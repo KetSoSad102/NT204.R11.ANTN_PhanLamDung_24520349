@@ -1,7 +1,7 @@
-from scapy.layers.inet import IP, TCP
+from scapy.layers.inet import IP, TCP, UDP
 
 from ids_parser.capture import CapturedPacket
-from ids_parser.parser import parse_ipv4, parse_tcp
+from ids_parser.parser import parse_ipv4, parse_tcp, parse_udp
 
 
 def test_parse_ipv4() -> None:
@@ -79,3 +79,31 @@ def test_tcp_handshake_flags() -> None:
     assert parse_tcp(syn)["flags"] == "S"
     assert parse_tcp(syn_ack)["flags"] == "SA"
     assert parse_tcp(ack)["flags"] == "A"
+
+def test_parse_udp() -> None:
+    packet = (
+        IP(
+            src="10.0.0.1",
+            dst="8.8.8.8",
+        )
+        / UDP(
+            sport=54321,
+            dport=53,
+        )
+        / b"test dns payload"
+    )
+
+    captured = CapturedPacket(
+        packet=packet,
+        timestamp=1234567890.0,
+    )
+
+    result = parse_udp(captured)
+
+    assert result["timestamp"] == 1234567890.0
+    assert result["src_ip"] == "10.0.0.1"
+    assert result["dst_ip"] == "8.8.8.8"
+    assert result["src_port"] == 54321
+    assert result["dst_port"] == 53
+    assert result["length"] == 8 + len(b"test dns payload")
+    assert result["payload"] == b"test dns payload"
