@@ -269,12 +269,20 @@ Các lỗi được ghi nhận trong trường `parser_status` thay vì làm to�
 
 ## 13. AI Usage Disclosure
 
-Trong quá trình thực hiện bài tập, AI được sử dụng để:
+Trong quá trình thực hiện bài tập, AI được sử dụng để hỗ trợ:
 
-* Hỗ trợ phân tích yêu cầu bài tập.
-* Gợi ý kiến trúc parsing pipeline.
-* Hỗ trợ giải thích và rà soát code.
+* Phân tích yêu cầu và cấu trúc bài tập.
+* Gợi ý kiến trúc parsing pipeline và cách tổ chức mã nguồn.
+* Giải thích, rà soát và hỗ trợ sửa lỗi trong quá trình phát triển.
 * Hỗ trợ xây dựng và kiểm tra các testcase.
-* Hỗ trợ phát hiện và sửa một số lỗi trong quá trình phát triển.
 
 Công cụ AI được sử dụng: OpenAI ChatGPT.
+
+Các phần mã nguồn có sử dụng AI hỗ trợ gồm:
+
+* `main.py`
+* Các module trong thư mục `ids_parser/`
+* Các test và script tạo PCAP trong thư mục `tests/`
+* Nội dung README và một số tài liệu mô tả project.
+
+AI chỉ được sử dụng để hỗ trợ quá trình phát triển và kiểm thử; mã nguồn được kiểm tra, chạy thử và điều chỉnh trong quá trình thực hiện bài tập.
