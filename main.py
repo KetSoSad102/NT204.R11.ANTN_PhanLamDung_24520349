@@ -14,6 +14,7 @@ from ids_parser.parser import parse_ipv4, parse_tcp, parse_udp
 from ids_parser.protocols import detect_application_protocol
 from ids_parser.dns_parser import parse_dns
 from ids_parser.smtp_parser import parse_smtp
+from ids_parser.decoder import decode_event
 
 
 def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
@@ -109,7 +110,7 @@ def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
         except ValueError as exc:
             parser_status = f"application parse error: {exc}"
 
-    return normalize_event(
+    event = normalize_event(
         packet_id,
         network,
         transport,
@@ -118,6 +119,8 @@ def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
         application_data=application_data,
         parser_status=parser_status,
     )
+
+    return decode_event(event)
 
 
 def run_pipeline(
