@@ -38,7 +38,39 @@ def normalize_headers(headers: dict[str, Any] | None) -> dict[str, Any]:
     return {str(k).strip().lower(): v for k, v in headers.items()}
 
 
+def sanitize_missing_fields(event: NormalizedEvent) -> NormalizedEvent:
+    if event.application_data is None or not isinstance(event.application_data, dict):
+        event.application_data = {}
+
+    if not event.application_protocol:
+        event.application_protocol = "UNKNOWN"
+
+    app_proto = event.application_protocol.upper()
+
+    if app_proto == "HTTP":
+        if "headers" not in event.application_data or event.application_data["headers"] is None:
+            event.application_data["headers"] = {}
+        if "body" not in event.application_data or event.application_data["body"] is None:
+            event.application_data["body"] = ""
+
+    elif app_proto == "DNS":
+        if "answers" not in event.application_data or event.application_data["answers"] is None:
+            event.application_data["answers"] = []
+        if "domain" not in event.application_data:
+            event.application_data["domain"] = None
+
+    elif app_proto == "SMTP":
+        if "headers" not in event.application_data or event.application_data["headers"] is None:
+            event.application_data["headers"] = {}
+        if "body" not in event.application_data or event.application_data["body"] is None:
+            event.application_data["body"] = ""
+
+    return event
+
+
 def preprocess_event(event: NormalizedEvent) -> NormalizedEvent:
+    event = sanitize_missing_fields(event)
+
     if event.network_protocol:
         net_proto = event.network_protocol.strip().upper()
         event.network_protocol = "IPv4" if net_proto == "IPV4" else net_proto
@@ -82,4 +114,3 @@ def preprocess_event(event: NormalizedEvent) -> NormalizedEvent:
                     ans["name"] = normalize_domain(ans["name"])
 
     return event
-

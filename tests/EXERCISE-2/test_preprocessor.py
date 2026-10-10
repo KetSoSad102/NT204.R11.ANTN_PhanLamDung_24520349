@@ -84,3 +84,54 @@ def test_t05_normalize_dns_event():
     assert processed.application_data["domain"] == "www.google.com"
     assert processed.application_data["answers"][0]["name"] == "www.google.com"
 
+
+def test_t06_missing_optional_fields_event():
+    event = NormalizedEvent(
+        packet_id=3,
+        timestamp=1700000002.0,
+        src_ip="10.0.0.1",
+        dst_ip="10.0.0.2",
+        transport_protocol=None,
+        src_port=None,
+        dst_port=None,
+        tcp_flags=None,
+        payload_b64=None,
+        application_data=None,
+    )
+
+    processed = preprocess_event(event)
+
+    assert processed.application_data == {}
+    assert processed.src_port is None
+    assert processed.dst_port is None
+    assert processed.tcp_flags is None
+    assert processed.application_protocol == "UNKNOWN"
+
+
+def test_t06_missing_http_and_dns_fields():
+    http_event = NormalizedEvent(
+        packet_id=4,
+        timestamp=1700000003.0,
+        src_ip="10.0.0.1",
+        dst_ip="10.0.0.2",
+        transport_protocol="TCP",
+        application_protocol="HTTP",
+        application_data={},
+    )
+    processed_http = preprocess_event(http_event)
+    assert processed_http.application_data["headers"] == {}
+    assert processed_http.application_data["body"] == ""
+
+    dns_event = NormalizedEvent(
+        packet_id=5,
+        timestamp=1700000004.0,
+        src_ip="10.0.0.1",
+        dst_ip="8.8.8.8",
+        transport_protocol="UDP",
+        application_protocol="DNS",
+        application_data={},
+    )
+    processed_dns = preprocess_event(dns_event)
+    assert processed_dns.application_data["answers"] == []
+    assert processed_dns.application_data["domain"] is None
+
