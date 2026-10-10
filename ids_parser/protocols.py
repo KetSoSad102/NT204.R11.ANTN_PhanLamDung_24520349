@@ -59,15 +59,15 @@ def _payload_starts_with_http(payload: bytes) -> bool:
 
 
 def _payload_looks_like_smtp(payload: bytes) -> bool:
-    """
-    Detect common SMTP commands and response status lines.
-    """
     upper_payload = payload.upper()
 
     if any(upper_payload.startswith(command) for command in SMTP_COMMANDS):
         return True
 
-    return any(upper_payload.startswith(response) for response in SMTP_RESPONSES)
+    if any(upper_payload.startswith(response) for response in SMTP_RESPONSES):
+        return True
+
+    return b"CONTENT-TRANSFER-ENCODING" in upper_payload
 
 
 def _payload_looks_like_dns(packet: Packet, payload: bytes) -> bool:
@@ -109,10 +109,11 @@ def detect_application_protocol(
     if _payload_looks_like_smtp(payload):
         return "SMTP"
 
-    # DNS commonly uses UDP/TCP port 53. Combine port information
-    # with the DNS payload decoder instead of relying only on port.
     if 53 in ports and transport_protocol in {"TCP", "UDP"}:
         if _payload_looks_like_dns(packet, payload):
             return "DNS"
+
+    if 25 in ports and transport_protocol == "TCP":
+        return "SMTP"
 
     return "UNKNOWN"
