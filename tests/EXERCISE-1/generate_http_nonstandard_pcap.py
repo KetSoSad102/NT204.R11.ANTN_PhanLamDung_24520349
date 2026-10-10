@@ -4,25 +4,23 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/pcap/http_response.pcap")
+    output = Path("TEST/EXERCISE-1/pcap/http_nonstandard_port.pcap")
 
     packet = (
         IP(
-            src="10.0.0.2",
-            dst="10.0.0.1",
+            src="10.0.0.10",
+            dst="10.0.0.20",
         )
         / TCP(
-            sport=80,
-            dport=12345,
+            sport=45000,
+            dport=8088,
             flags="PA",
         )
         / (
-            b"HTTP/1.1 200 OK\r\n"
-            b"Content-Type: text/plain\r\n"
-            b"Content-Length: 5\r\n"
-            b"Server: test-server\r\n"
+            b"GET /admin HTTP/1.1\r\n"
+            b"Host: example.com:8088\r\n"
+            b"User-Agent: ids-test\r\n"
             b"\r\n"
-            b"Hello"
         )
     )
 
@@ -31,6 +29,7 @@ def main() -> None:
 
     print(f"Created {output}")
     print("Packets: 1")
+    print("Destination port: 8088")
 
 
 if __name__ == "__main__":

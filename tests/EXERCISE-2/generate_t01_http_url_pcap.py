@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/pcap/t01_http_url.pcap")
+    output = Path("TEST/EXERCISE-2/pcap/t01_http_url.pcap")
 
     packets = [
         # Packet 1: HTTP GET chứa percent-encoding trong URI

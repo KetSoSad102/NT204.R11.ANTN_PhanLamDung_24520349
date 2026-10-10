@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/pcap/http_requests.pcap")
+    output = Path("TEST/EXERCISE-1/pcap/http_requests.pcap")
 
     packets = [
         (

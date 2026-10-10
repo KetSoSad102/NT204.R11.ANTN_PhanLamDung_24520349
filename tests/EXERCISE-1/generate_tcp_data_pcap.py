@@ -1,21 +1,25 @@
 from pathlib import Path
 
-from scapy.all import IP, UDP, wrpcap
+from scapy.all import IP, TCP, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/pcap/udp.pcap")
+    output = Path("TEST/EXERCISE-1/pcap/tcp_data.pcap")
 
-    payload = b"Hello IDS UDP payload"
+    payload = b"Hello IDS TCP payload"
 
     packet = (
         IP(
             src="10.0.0.10",
             dst="10.0.0.20",
         )
-        / UDP(
-            sport=40000,
-            dport=9999,
+        / TCP(
+            sport=50001,
+            dport=8080,
+            seq=1000,
+            ack=2000,
+            flags="PA",
+            window=4096,
         )
         / payload
     )
