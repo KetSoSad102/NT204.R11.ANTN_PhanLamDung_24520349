@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from ids_parser.flow_tracker import FlowTracker
 from ids_parser.models import NormalizedEvent
 
@@ -154,4 +155,55 @@ def test_t09_tcp_close_fin_ack():
     flow_closed = tracker.track_packet(ev_ack)
     assert flow_closed.state == "CLOSED/RESET"
     assert ev_ack.flow_state == "CLOSED/RESET"
+
+
+def test_t10_udp_query_response():
+    tracker = FlowTracker()
+
+    dns_query_payload = b"\x12\x34\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x07example\x03com\x00\x00\x01\x00\x01"
+    b64_query = base64.b64encode(dns_query_payload).decode("ascii")
+
+    ev_query = NormalizedEvent(
+        packet_id=1,
+        timestamp=1700000000.0,
+        src_ip="192.168.1.10",
+        dst_ip="8.8.8.8",
+        network_protocol="IPv4",
+        transport_protocol="UDP",
+        src_port=53000,
+        dst_port=53,
+        application_protocol="DNS",
+        payload_b64=b64_query,
+    )
+    flow1 = tracker.track_packet(ev_query)
+
+    dns_response_payload = dns_query_payload + b"\xc0\x0c\x00\x01\x00\x01\x00\x00\x01\x2c\x00\x04\x5d\xb8\xd8\x22"
+    b64_response = base64.b64encode(dns_response_payload).decode("ascii")
+
+    ev_response = NormalizedEvent(
+        packet_id=2,
+        timestamp=1700000000.02,
+        src_ip="8.8.8.8",
+        dst_ip="192.168.1.10",
+        network_protocol="IPv4",
+        transport_protocol="UDP",
+        src_port=53,
+        dst_port=53000,
+        application_protocol="DNS",
+        payload_b64=b64_response,
+    )
+    flow2 = tracker.track_packet(ev_response)
+
+    assert len(tracker.flows) == 1
+    assert ev_query.flow_id == ev_response.flow_id
+    assert ev_query.flow_direction == "forward"
+    assert ev_response.flow_direction == "backward"
+    assert flow2.protocol == "UDP"
+    assert flow2.application_protocol == "DNS"
+    assert flow2.packet_count == 2
+    assert flow2.forward_packet_count == 1
+    assert flow2.backward_packet_count == 1
+    assert flow2.forward_byte_count == len(dns_query_payload)
+    assert flow2.backward_byte_count == len(dns_response_payload)
+    assert flow2.byte_count == len(dns_query_payload) + len(dns_response_payload)
 
