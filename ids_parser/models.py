@@ -33,6 +33,10 @@ class NormalizedEvent:
 
     parser_status: str = "ok"
 
+    flow_id: str | None = None
+    flow_state: str | None = None
+    flow_direction: str | None = None
+
     def to_dict(self) -> dict[str, Any]:
         """
         Convert the event to a JSON-compatible dictionary.

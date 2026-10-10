@@ -16,9 +16,14 @@ from ids_parser.dns_parser import parse_dns
 from ids_parser.smtp_parser import parse_smtp
 from ids_parser.decoder import decode_event
 from ids_parser.preprocessor import preprocess_event
+from ids_parser.flow_tracker import FlowTracker
 
 
-def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
+def build_event(
+    packet_id: int,
+    captured: CapturedPacket,
+    flow_tracker: FlowTracker | None = None,
+) -> NormalizedEvent:
     """
     Run one captured packet through the parsing pipeline.
     """
@@ -122,7 +127,10 @@ def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
     )
 
     event = decode_event(event)
-    return preprocess_event(event)
+    event = preprocess_event(event)
+    if flow_tracker is not None:
+        flow_tracker.track_packet(event)
+    return event
 
 
 def run_pipeline(
@@ -133,15 +141,11 @@ def run_pipeline(
     count: int | None,
     bpf_filter: str | None,
 ) -> None:
-    """
-    Capture packets, parse them and write normalized IDS
-    events as JSON Lines.
-    """
-
     output_path = Path(output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     packet_count = 0
+    tracker = FlowTracker()
 
     with output_path.open("w", encoding="utf-8") as output_file:
         for captured in iter_packets(
@@ -155,6 +159,7 @@ def run_pipeline(
             event = build_event(
                 packet_id=packet_count,
                 captured=captured,
+                flow_tracker=tracker,
             )
 
             output_file.write(
