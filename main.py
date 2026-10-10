@@ -15,6 +15,7 @@ from ids_parser.protocols import detect_application_protocol
 from ids_parser.dns_parser import parse_dns
 from ids_parser.smtp_parser import parse_smtp
 from ids_parser.decoder import decode_event
+from ids_parser.preprocessor import preprocess_event
 
 
 def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
@@ -120,7 +121,8 @@ def build_event(packet_id: int, captured: CapturedPacket) -> NormalizedEvent:
         parser_status=parser_status,
     )
 
-    return decode_event(event)
+    event = decode_event(event)
+    return preprocess_event(event)
 
 
 def run_pipeline(
