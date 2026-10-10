@@ -111,27 +111,33 @@ class FlowTracker:
 
         if proto == "TCP":
             flags = (event.tcp_flags or "").upper()
-            if "S" in flags and "A" not in flags:
+            if "S" in flags:
                 flow.syn_count += 1
+            if "A" in flags:
+                flow.ack_count += 1
+            if "F" in flags:
+                flow.fin_count += 1
+            if "R" in flags:
+                flow.rst_count += 1
+
+            if "R" in flags:
+                flow.state = "CLOSED/RESET"
+            elif "F" in flags:
+                if flow.state == "CLOSING" or flow.fin_count >= 2:
+                    flow.state = "CLOSED/RESET"
+                else:
+                    flow.state = "CLOSING"
+            elif "S" in flags and "A" not in flags:
                 flow.handshake_syn = True
                 flow.state = "NEW/HANDSHAKE"
             elif "S" in flags and "A" in flags:
-                flow.syn_count += 1
-                flow.ack_count += 1
                 flow.handshake_syn_ack = True
                 flow.state = "NEW/HANDSHAKE"
-            elif "R" in flags:
-                flow.rst_count += 1
-                flow.state = "CLOSED/RESET"
-            elif "F" in flags:
-                flow.fin_count += 1
-                flow.state = "CLOSING"
             elif "A" in flags:
-                flow.ack_count += 1
-                if flow.handshake_syn and flow.handshake_syn_ack and flow.state == "NEW/HANDSHAKE":
-                    flow.state = "ESTABLISHED"
-                elif flow.state == "CLOSING":
+                if flow.state == "CLOSING":
                     flow.state = "CLOSED/RESET"
+                elif flow.handshake_syn and flow.handshake_syn_ack and flow.state == "NEW/HANDSHAKE":
+                    flow.state = "ESTABLISHED"
 
         event.flow_id = flow.flow_id
         event.flow_state = flow.state
