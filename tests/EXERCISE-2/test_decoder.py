@@ -45,3 +45,54 @@ def test_t01_http_url_decode_event():
     expected_decoded = "/login?user=admin' OR 1=1&pass=123#"
     assert app_data["decoded_uri"] == expected_decoded
 
+
+def test_t02_html_entity_decode_direct():
+    """
+    T02: Kiểm tra decode_html_entities cho dữ liệu text phù hợp.
+    Ví dụ trong đề bài: &lt;script&gt; -> <script>
+    """
+    from ids_parser.decoder import decode_html_entities
+
+    raw_text = "&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt; &amp; test"
+    decoded = decode_html_entities(raw_text)
+    assert decoded == "<script>alert(\"XSS\")</script> & test"
+
+
+def test_t02_html_entity_decode_event():
+    """
+    T02: Kiểm tra giải mã HTML entity trong HTTP request body:
+    - &lt;...&gt; được giải mã đúng.
+    - Không crash khi gặp text bất kỳ.
+    - raw_body được giữ nguyên vẹn.
+    """
+    raw_body = "content=&lt;script&gt;alert(1)&lt;/script&gt;&amp;status=ok"
+    event = NormalizedEvent(
+        packet_id=2,
+        timestamp=1700000001.0,
+        src_ip="192.168.1.100",
+        dst_ip="192.168.1.1",
+        network_protocol="IPv4",
+        transport_protocol="TCP",
+        src_port=50001,
+        dst_port=80,
+        application_protocol="HTTP",
+        application_data={
+            "message_type": "request",
+            "method": "POST",
+            "target": "/post_comment",
+            "version": "HTTP/1.1",
+            "headers": {"Host": "example.com", "Content-Type": "application/x-www-form-urlencoded"},
+            "body": raw_body,
+        },
+    )
+
+    processed_event = decode_event(event)
+    app_data = processed_event.application_data
+
+    # raw_body còn nguyên
+    assert app_data["raw_body"] == raw_body
+
+    # decoded_body giải mã cả percent-encoding và HTML entities
+    expected_decoded = "content=<script>alert(1)</script>&status=ok"
+    assert app_data["decoded_body"] == expected_decoded
+
