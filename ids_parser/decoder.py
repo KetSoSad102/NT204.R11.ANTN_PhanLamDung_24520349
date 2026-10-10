@@ -9,10 +9,25 @@ from typing import Any
 from ids_parser.models import NormalizedEvent
 
 
+def decode_bytes_safe(data: bytes) -> tuple[str, str]:
+    if not data:
+        return "", "ok"
+    try:
+        return data.decode("utf-8"), "ok"
+    except UnicodeDecodeError:
+        try:
+            return data.decode("utf-8", errors="replace"), "partial"
+        except Exception as exc:
+            return str(data), f"error: {exc}"
+
+
 def decode_url(data: str) -> str:
     if not data:
         return data
-    return urllib.parse.unquote(data)
+    try:
+        return urllib.parse.unquote(data, errors="replace")
+    except Exception:
+        return data
 
 
 def decode_html_entities(text: str) -> str:
@@ -117,6 +132,23 @@ def decode_smtp_data(app_data: dict[str, Any], raw_payload: bytes | None = None)
 
 
 def decode_event(event: NormalizedEvent) -> NormalizedEvent:
+    if event.payload_b64:
+        try:
+            raw_payload = base64.b64decode(event.payload_b64)
+            _, char_status = decode_bytes_safe(raw_payload)
+            if char_status == "partial":
+                if not isinstance(event.application_data, dict):
+                    event.application_data = {}
+                event.application_data["char_decode_status"] = "partial"
+                if event.parser_status == "ok":
+                    event.parser_status = "partial"
+        except Exception:
+            if not isinstance(event.application_data, dict):
+                event.application_data = {}
+            event.application_data["char_decode_status"] = "error"
+            if event.parser_status == "ok":
+                event.parser_status = "error"
+
     if event.application_protocol == "HTTP" and event.application_data:
         try:
             event.application_data = decode_http_data(event.application_data)

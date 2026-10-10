@@ -150,3 +150,35 @@ def test_t03_smtp_mime_quoted_printable_event():
     assert app_data["raw_body"] == "Alert:=20Intrusion=20Detected=3DTrue"
     assert app_data["decoded_body"] == "Alert: Intrusion Detected=True"
     assert app_data["decode_status"] == "ok"
+
+
+def test_t04_invalid_bytes_direct():
+    from ids_parser.decoder import decode_bytes_safe
+
+    raw_bytes = b"\xff\xfe\xfa\x80"
+    decoded, status = decode_bytes_safe(raw_bytes)
+    assert status == "partial"
+    assert "\ufffd" in decoded
+
+
+def test_t04_invalid_bytes_event():
+    raw_invalid_payload = b"UNKNOWN_DATA_\x80\xff\xfe\xc3\x28"
+    b64_payload = base64.b64encode(raw_invalid_payload).decode("ascii")
+
+    event = NormalizedEvent(
+        packet_id=5,
+        timestamp=1700000004.0,
+        src_ip="192.168.1.100",
+        dst_ip="192.168.1.50",
+        network_protocol="IPv4",
+        transport_protocol="TCP",
+        src_port=50000,
+        dst_port=9999,
+        application_protocol="UNKNOWN",
+        payload_b64=b64_payload,
+    )
+
+    processed = decode_event(event)
+
+    assert processed.parser_status == "partial"
+    assert processed.application_data.get("char_decode_status") == "partial"
