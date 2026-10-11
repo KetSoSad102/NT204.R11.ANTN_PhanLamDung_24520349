@@ -54,7 +54,19 @@ class FlowTracker:
     def get_flow(self, flow_id: str) -> Flow | None:
         return self.flows.get(flow_id)
 
+    def check_timeouts(self, current_time: float) -> list[Flow]:
+        expired = []
+        for flow_id, flow in list(self.flows.items()):
+            timeout = self.tcp_timeout if flow.protocol == "TCP" else self.udp_timeout
+            if current_time - flow.last_seen > timeout:
+                expired.append(flow)
+                del self.flows[flow_id]
+        return expired
+
     def track_packet(self, event: NormalizedEvent, payload_len: int | None = None) -> Flow:
+        curr_time = float(event.timestamp)
+        self.check_timeouts(curr_time)
+
         proto = (event.transport_protocol or "UNKNOWN").upper()
         src_ip = event.src_ip or "0.0.0.0"
         dst_ip = event.dst_ip or "0.0.0.0"
@@ -71,7 +83,6 @@ class FlowTracker:
                 payload_len = 0
 
         flow_id = generate_flow_id(src_ip, dst_ip, src_port, dst_port, proto)
-        curr_time = float(event.timestamp)
         src_ep = f"{src_ip}:{src_port}"
         dst_ep = f"{dst_ip}:{dst_port}"
 

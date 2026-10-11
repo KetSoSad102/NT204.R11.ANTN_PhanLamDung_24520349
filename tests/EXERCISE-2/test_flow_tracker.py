@@ -234,3 +234,34 @@ def test_t11_concurrent_flows():
     assert tracker.flows[ev_b1.flow_id].packet_count == 2
     assert tracker.flows[ev_c1.flow_id].packet_count == 1
 
+
+def test_t12_idle_timeout_removal():
+    tracker = FlowTracker(tcp_timeout=10.0, udp_timeout=5.0)
+
+    ev_udp = NormalizedEvent(packet_id=1, timestamp=100.0, src_ip="10.0.0.1", dst_ip="8.8.8.8", network_protocol="IPv4", transport_protocol="UDP", src_port=53000, dst_port=53)
+    tracker.track_packet(ev_udp)
+    assert len(tracker.flows) == 1
+
+    expired = tracker.check_timeouts(103.0)
+    assert len(expired) == 0
+    assert len(tracker.flows) == 1
+
+    expired = tracker.check_timeouts(106.0)
+    assert len(expired) == 1
+    assert len(tracker.flows) == 0
+
+
+def test_t12_idle_timeout_packet_trigger():
+    tracker = FlowTracker(tcp_timeout=10.0, udp_timeout=5.0)
+
+    ev1 = NormalizedEvent(packet_id=1, timestamp=100.0, src_ip="10.0.0.1", dst_ip="10.0.0.2", network_protocol="IPv4", transport_protocol="TCP", src_port=50000, dst_port=80, tcp_flags="S")
+    flow1 = tracker.track_packet(ev1)
+    assert len(tracker.flows) == 1
+
+    ev2 = NormalizedEvent(packet_id=2, timestamp=115.0, src_ip="10.0.0.3", dst_ip="10.0.0.4", network_protocol="IPv4", transport_protocol="TCP", src_port=60000, dst_port=80, tcp_flags="S")
+    flow2 = tracker.track_packet(ev2)
+
+    assert len(tracker.flows) == 1
+    assert flow1.flow_id not in tracker.flows
+    assert flow2.flow_id in tracker.flows
+
