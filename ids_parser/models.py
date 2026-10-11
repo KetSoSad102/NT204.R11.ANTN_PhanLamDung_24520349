@@ -6,13 +6,6 @@ from typing import Any
 
 @dataclass
 class NormalizedEvent:
-    """
-    Standardized IDS event.
-
-    This object contains only normalized data that later IDS
-    detection modules can consume without accessing Scapy.
-    """
-
     packet_id: int
     timestamp: float
 
@@ -37,8 +30,9 @@ class NormalizedEvent:
     flow_state: str | None = None
     flow_direction: str | None = None
 
+    preprocess_status: str = "valid"
+    processing_action: str = "keep"
+    reason: str | None = None
+
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the event to a JSON-compatible dictionary.
-        """
         return asdict(self)

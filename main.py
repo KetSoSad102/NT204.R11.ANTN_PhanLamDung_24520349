@@ -34,17 +34,15 @@ def build_event(
     try:
         network = parse_ipv4(captured)
     except ValueError as exc:
-        return NormalizedEvent(
+        event = NormalizedEvent(
             packet_id=packet_id,
             timestamp=captured.timestamp,
             parser_status=f"error: {exc}",
         )
+        return preprocess_event(decode_event(event))
 
     packet = captured.packet
 
-    # -----------------------------
-    # Transport layer
-    # -----------------------------
     transport = None
     transport_protocol = None
 
@@ -53,33 +51,36 @@ def build_event(
             transport = parse_tcp(captured)
             transport_protocol = "TCP"
         except ValueError as exc:
-            return normalize_event(
+            event = normalize_event(
                 packet_id,
                 network,
                 transport_protocol="TCP",
                 parser_status=f"error: {exc}",
             )
+            return preprocess_event(decode_event(event))
 
     elif packet[IP].proto == 17:
         try:
             transport = parse_udp(captured)
             transport_protocol = "UDP"
         except ValueError as exc:
-            return normalize_event(
+            event = normalize_event(
                 packet_id,
                 network,
                 transport_protocol="UDP",
                 parser_status=f"error: {exc}",
             )
+            return preprocess_event(decode_event(event))
 
     else:
-        return normalize_event(
+        event = normalize_event(
             packet_id,
             network,
             transport_protocol=None,
             application_protocol="UNKNOWN",
             parser_status="unsupported transport protocol",
         )
+        return preprocess_event(decode_event(event))
 
     # -----------------------------
     # Application protocol detection

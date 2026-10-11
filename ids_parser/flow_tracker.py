@@ -117,11 +117,21 @@ class FlowTracker:
                 del self.flows[flow_id]
         return expired
 
-    def track_packet(self, event: NormalizedEvent, payload_len: int | None = None) -> Flow:
-        curr_time = float(event.timestamp)
+    def track_packet(self, event: NormalizedEvent, payload_len: int | None = None) -> Flow | None:
+        try:
+            curr_time = float(event.timestamp)
+        except (ValueError, TypeError):
+            curr_time = 0.0
+
         self.check_timeouts(curr_time)
 
+        if event.preprocess_status == "invalid":
+            return None
+
         proto = (event.transport_protocol or "UNKNOWN").upper()
+        if proto not in ("TCP", "UDP"):
+            return None
+
         src_ip = event.src_ip or "0.0.0.0"
         dst_ip = event.dst_ip or "0.0.0.0"
         src_port = event.src_port or 0

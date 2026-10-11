@@ -135,3 +135,67 @@ def test_t06_missing_http_and_dns_fields():
     assert processed_dns.application_data["answers"] == []
     assert processed_dns.application_data["domain"] is None
 
+
+def test_t14_malformed_event_invalid_port():
+    event = NormalizedEvent(
+        packet_id=6,
+        timestamp=1700000005.0,
+        src_ip="10.0.0.1",
+        dst_ip="10.0.0.2",
+        transport_protocol="TCP",
+        src_port=70000,
+        dst_port=80,
+    )
+    processed = preprocess_event(event)
+    assert processed.preprocess_status == "invalid"
+    assert processed.processing_action == "drop"
+    assert "invalid src_port" in str(processed.reason)
+
+
+def test_t14_malformed_event_invalid_timestamp():
+    event = NormalizedEvent(
+        packet_id=7,
+        timestamp=-50.0,
+        src_ip="10.0.0.1",
+        dst_ip="10.0.0.2",
+        transport_protocol="TCP",
+        src_port=12345,
+        dst_port=80,
+    )
+    processed = preprocess_event(event)
+    assert processed.preprocess_status == "invalid"
+    assert processed.processing_action == "drop"
+    assert "timestamp" in str(processed.reason)
+
+
+def test_t14_malformed_event_parser_error():
+    event = NormalizedEvent(
+        packet_id=8,
+        timestamp=1700000007.0,
+        parser_status="error: corrupted IP header length",
+    )
+    processed = preprocess_event(event)
+    assert processed.preprocess_status == "invalid"
+    assert processed.processing_action == "drop"
+    assert "error:" in str(processed.reason)
+
+
+def test_t14_malformed_event_flow_tracker_safe():
+    from ids_parser.flow_tracker import FlowTracker
+
+    tracker = FlowTracker()
+    event = NormalizedEvent(
+        packet_id=9,
+        timestamp=1700000008.0,
+        src_ip="10.0.0.1",
+        dst_ip="10.0.0.2",
+        transport_protocol="TCP",
+        src_port=99999,
+        dst_port=80,
+    )
+    processed = preprocess_event(event)
+    flow = tracker.track_packet(processed)
+    assert flow is None
+    assert len(tracker.flows) == 0
+
+
