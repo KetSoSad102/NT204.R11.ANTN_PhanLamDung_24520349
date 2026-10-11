@@ -207,3 +207,30 @@ def test_t10_udp_query_response():
     assert flow2.backward_byte_count == len(dns_response_payload)
     assert flow2.byte_count == len(dns_query_payload) + len(dns_response_payload)
 
+
+def test_t11_concurrent_flows():
+    tracker = FlowTracker()
+
+    ev_a1 = NormalizedEvent(packet_id=1, timestamp=1700000000.0, src_ip="10.0.0.1", dst_ip="10.0.0.2", network_protocol="IPv4", transport_protocol="TCP", src_port=40001, dst_port=80, tcp_flags="PA")
+    ev_b1 = NormalizedEvent(packet_id=2, timestamp=1700000000.01, src_ip="10.0.0.1", dst_ip="10.0.0.2", network_protocol="IPv4", transport_protocol="TCP", src_port=40002, dst_port=80, tcp_flags="PA")
+    ev_a2 = NormalizedEvent(packet_id=3, timestamp=1700000000.02, src_ip="10.0.0.2", dst_ip="10.0.0.1", network_protocol="IPv4", transport_protocol="TCP", src_port=80, dst_port=40001, tcp_flags="PA")
+    ev_c1 = NormalizedEvent(packet_id=4, timestamp=1700000000.03, src_ip="10.0.0.1", dst_ip="8.8.8.8", network_protocol="IPv4", transport_protocol="UDP", src_port=53000, dst_port=53)
+    ev_b2 = NormalizedEvent(packet_id=5, timestamp=1700000000.04, src_ip="10.0.0.2", dst_ip="10.0.0.1", network_protocol="IPv4", transport_protocol="TCP", src_port=80, dst_port=40002, tcp_flags="PA")
+
+    tracker.track_packet(ev_a1)
+    tracker.track_packet(ev_b1)
+    tracker.track_packet(ev_a2)
+    tracker.track_packet(ev_c1)
+    tracker.track_packet(ev_b2)
+
+    assert len(tracker.flows) == 3
+    assert ev_a1.flow_id == ev_a2.flow_id
+    assert ev_b1.flow_id == ev_b2.flow_id
+    assert ev_a1.flow_id != ev_b1.flow_id
+    assert ev_a1.flow_id != ev_c1.flow_id
+    assert ev_b1.flow_id != ev_c1.flow_id
+
+    assert tracker.flows[ev_a1.flow_id].packet_count == 2
+    assert tracker.flows[ev_b1.flow_id].packet_count == 2
+    assert tracker.flows[ev_c1.flow_id].packet_count == 1
+
