@@ -32,8 +32,56 @@ class Flow:
     handshake_syn: bool = False
     handshake_syn_ack: bool = False
 
+    @property
+    def SYN_count(self) -> int:
+        return self.syn_count
+
+    @property
+    def ACK_count(self) -> int:
+        return self.ack_count
+
+    @property
+    def FIN_count(self) -> int:
+        return self.fin_count
+
+    @property
+    def RST_count(self) -> int:
+        return self.rst_count
+
+    def get_statistics(self) -> dict[str, Any]:
+        return {
+            "flow_id": self.flow_id,
+            "protocol": self.protocol,
+            "application_protocol": self.application_protocol,
+            "endpoint_a": self.endpoint_a,
+            "endpoint_b": self.endpoint_b,
+            "start_time": self.start_time,
+            "last_seen": self.last_seen,
+            "duration": self.duration,
+            "packet_count": self.packet_count,
+            "byte_count": self.byte_count,
+            "forward_packet_count": self.forward_packet_count,
+            "forward_byte_count": self.forward_byte_count,
+            "backward_packet_count": self.backward_packet_count,
+            "backward_byte_count": self.backward_byte_count,
+            "syn_count": self.syn_count,
+            "ack_count": self.ack_count,
+            "fin_count": self.fin_count,
+            "rst_count": self.rst_count,
+            "SYN_count": self.syn_count,
+            "ACK_count": self.ack_count,
+            "FIN_count": self.fin_count,
+            "RST_count": self.rst_count,
+            "state": self.state,
+        }
+
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        d["SYN_count"] = self.syn_count
+        d["ACK_count"] = self.ack_count
+        d["FIN_count"] = self.fin_count
+        d["RST_count"] = self.rst_count
+        return d
 
 
 def generate_flow_id(src_ip: str, dst_ip: str, src_port: int, dst_port: int, protocol: str) -> str:
@@ -53,6 +101,12 @@ class FlowTracker:
 
     def get_flow(self, flow_id: str) -> Flow | None:
         return self.flows.get(flow_id)
+
+    def get_statistics(self, flow_id: str) -> dict[str, Any] | None:
+        flow = self.get_flow(flow_id)
+        if flow:
+            return flow.get_statistics()
+        return None
 
     def check_timeouts(self, current_time: float) -> list[Flow]:
         expired = []

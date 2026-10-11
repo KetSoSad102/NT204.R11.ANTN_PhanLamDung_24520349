@@ -265,3 +265,77 @@ def test_t12_idle_timeout_packet_trigger():
     assert flow1.flow_id not in tracker.flows
     assert flow2.flow_id in tracker.flows
 
+
+def test_t13_flow_statistics_tcp():
+    tracker = FlowTracker()
+
+    ev_syn = NormalizedEvent(packet_id=1, timestamp=100.0, src_ip="192.168.1.100", dst_ip="192.168.1.10", network_protocol="IPv4", transport_protocol="TCP", src_port=54321, dst_port=80, tcp_flags="S")
+    ev_syn_ack = NormalizedEvent(packet_id=2, timestamp=100.01, src_ip="192.168.1.10", dst_ip="192.168.1.100", network_protocol="IPv4", transport_protocol="TCP", src_port=80, dst_port=54321, tcp_flags="SA")
+    ev_ack = NormalizedEvent(packet_id=3, timestamp=100.02, src_ip="192.168.1.100", dst_ip="192.168.1.10", network_protocol="IPv4", transport_protocol="TCP", src_port=54321, dst_port=80, tcp_flags="A")
+    ev_req = NormalizedEvent(packet_id=4, timestamp=100.05, src_ip="192.168.1.100", dst_ip="192.168.1.10", network_protocol="IPv4", transport_protocol="TCP", src_port=54321, dst_port=80, tcp_flags="PA")
+    ev_res = NormalizedEvent(packet_id=5, timestamp=100.10, src_ip="192.168.1.10", dst_ip="192.168.1.100", network_protocol="IPv4", transport_protocol="TCP", src_port=80, dst_port=54321, tcp_flags="PA")
+    ev_fin1 = NormalizedEvent(packet_id=6, timestamp=100.20, src_ip="192.168.1.100", dst_ip="192.168.1.10", network_protocol="IPv4", transport_protocol="TCP", src_port=54321, dst_port=80, tcp_flags="FA")
+    ev_fin2 = NormalizedEvent(packet_id=7, timestamp=100.25, src_ip="192.168.1.10", dst_ip="192.168.1.100", network_protocol="IPv4", transport_protocol="TCP", src_port=80, dst_port=54321, tcp_flags="FA")
+    ev_last_ack = NormalizedEvent(packet_id=8, timestamp=100.26, src_ip="192.168.1.100", dst_ip="192.168.1.10", network_protocol="IPv4", transport_protocol="TCP", src_port=54321, dst_port=80, tcp_flags="A")
+
+    tracker.track_packet(ev_syn, payload_len=0)
+    tracker.track_packet(ev_syn_ack, payload_len=0)
+    tracker.track_packet(ev_ack, payload_len=0)
+    tracker.track_packet(ev_req, payload_len=50)
+    tracker.track_packet(ev_res, payload_len=150)
+    tracker.track_packet(ev_fin1, payload_len=0)
+    tracker.track_packet(ev_fin2, payload_len=0)
+    flow = tracker.track_packet(ev_last_ack, payload_len=0)
+
+    assert flow.packet_count == 8
+    assert flow.byte_count == 200
+    assert flow.forward_packet_count == 5
+    assert flow.forward_byte_count == 50
+    assert flow.backward_packet_count == 3
+    assert flow.backward_byte_count == 150
+    assert flow.syn_count == 2
+    assert flow.SYN_count == 2
+    assert flow.ack_count == 7
+    assert flow.ACK_count == 7
+    assert flow.fin_count == 2
+    assert flow.FIN_count == 2
+    assert flow.rst_count == 0
+    assert flow.RST_count == 0
+    assert flow.duration == 0.26
+    assert flow.state == "CLOSED/RESET"
+
+    stats = tracker.get_statistics(flow.flow_id)
+    assert stats is not None
+    assert stats["packet_count"] == 8
+    assert stats["byte_count"] == 200
+    assert stats["SYN_count"] == 2
+    assert stats["ACK_count"] == 7
+    assert stats["FIN_count"] == 2
+    assert stats["RST_count"] == 0
+    assert stats["duration"] == 0.26
+
+
+def test_t13_flow_statistics_udp():
+    tracker = FlowTracker()
+
+    ev_query = NormalizedEvent(packet_id=1, timestamp=200.0, src_ip="192.168.1.100", dst_ip="8.8.8.8", network_protocol="IPv4", transport_protocol="UDP", src_port=53000, dst_port=53)
+    ev_resp = NormalizedEvent(packet_id=2, timestamp=200.05, src_ip="8.8.8.8", dst_ip="192.168.1.100", network_protocol="IPv4", transport_protocol="UDP", src_port=53, dst_port=53000)
+
+    tracker.track_packet(ev_query, payload_len=40)
+    flow = tracker.track_packet(ev_resp, payload_len=80)
+
+    assert flow.packet_count == 2
+    assert flow.byte_count == 120
+    assert flow.forward_packet_count == 1
+    assert flow.forward_byte_count == 40
+    assert flow.backward_packet_count == 1
+    assert flow.backward_byte_count == 80
+    assert flow.duration == 0.05
+    assert flow.state == "ESTABLISHED"
+
+    stats = flow.get_statistics()
+    assert stats["packet_count"] == 2
+    assert stats["byte_count"] == 120
+    assert stats["duration"] == 0.05
+
+
