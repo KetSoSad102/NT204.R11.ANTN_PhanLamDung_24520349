@@ -1,0 +1,11 @@
+# Case 02: Syntax error test rules
+alert tcp any any -> any 80 msg:"no parens"; sid:101;
+alert tcp any -> 80 (msg:"short header"; sid:102;)
+alert tcp any 70000 -> any 80 (msg:"invalid port"; sid:103;)
+alert tcp 999.1.1.1 any -> any 80 (msg:"bad ip"; sid:104;)
+alert tcp any any -> any 80 (msg:"no sid";)
+alert tcp any any <- any 80 (msg:"bad dir"; sid:105;)
+alert tcp any any -> any 80 (msg:"no semi" sid:106;)
+alert tcp any any -> any 80 (msg:"unclosed quote; sid:107;)
+alert tcp any any -> any 80 (msg:"Valid rule"; sid:108; rev:1;)
+
