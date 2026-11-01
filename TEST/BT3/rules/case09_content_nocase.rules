@@ -1,0 +1,7 @@
+# Case 09: Content matching with and without nocase
+alert tcp any any -> any 80 (msg:"Exact Case Required"; content:"MALICIOUS"; sid:901; rev:1;)
+alert tcp any any -> any 80 (msg:"Nocase Matches Any Case"; content:"malicious"; nocase; sid:902; rev:1;)
+alert tcp any any -> any 80 (msg:"Mixed Content Rules"; content:"USER="; content:"admin"; nocase; sid:903; rev:1;)
+alert tcp any any -> any 80 (msg:"Mixed Content Exact Case Fail"; content:"USER="; content:"admin"; sid:904; rev:1;)
+alert tcp any any -> any 80 (msg:"Case Mismatch No Match"; content:"secret_token"; sid:905; rev:1;)
+

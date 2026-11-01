@@ -36,6 +36,54 @@ def get_event_payload(event: NormalizedEvent) -> bytes:
 
 
 @dataclass
+class ContentOption:
+    pattern: bytes
+    raw_pattern: str
+    nocase: bool = False
+    offset: int | None = None
+    depth: int | None = None
+    distance: int | None = None
+    within: int | None = None
+    negated: bool = False
+
+
+def extract_content_options(rule: SnortRule) -> list[ContentOption]:
+    content_list: list[ContentOption] = []
+    current: ContentOption | None = None
+
+    for opt in rule.options:
+        if opt.name == "content":
+            if opt.value is not None:
+                val = opt.value.strip()
+                negated = False
+                if val.startswith("!"):
+                    negated = True
+                    val = val[1:].strip()
+                pattern_bytes = parse_snort_pattern(val)
+                raw = val.strip('"')
+                current = ContentOption(
+                    pattern=pattern_bytes,
+                    raw_pattern=raw,
+                    nocase=False,
+                    negated=negated,
+                )
+                content_list.append(current)
+        elif current is not None:
+            if opt.name == "nocase":
+                current.nocase = True
+            elif opt.name == "offset" and opt.value is not None:
+                current.offset = int(opt.value)
+            elif opt.name == "depth" and opt.value is not None:
+                current.depth = int(opt.value)
+            elif opt.name == "distance" and opt.value is not None:
+                current.distance = int(opt.value)
+            elif opt.name == "within" and opt.value is not None:
+                current.within = int(opt.value)
+
+    return content_list
+
+
+@dataclass
 class MatchResult:
     matched: bool
     sid: int | None = None
@@ -128,21 +176,26 @@ class RuleMatcher:
 
     def match_content(self, rule: SnortRule, event: NormalizedEvent) -> tuple[bool, str]:
         self.content_evaluations += 1
-        payload = get_event_payload(event)
-
-        content_opts = [opt for opt in rule.options if opt.name == "content"]
-        if not content_opts:
+        content_items = extract_content_options(rule)
+        if not content_items:
             return True, ""
 
+        payload = get_event_payload(event)
         matched_patterns: list[str] = []
-        for opt in content_opts:
-            if not opt.value:
-                continue
-            pattern_bytes = parse_snort_pattern(opt.value)
-            clean_str = opt.value.strip().strip('"')
-            if pattern_bytes not in payload:
-                return False, ""
-            matched_patterns.append(f'content="{clean_str}"')
+
+        for item in content_items:
+            search_payload = payload.lower() if item.nocase else payload
+            search_pattern = item.pattern.lower() if item.nocase else item.pattern
+
+            found = search_pattern in search_payload
+            if item.negated:
+                if found:
+                    return False, ""
+                matched_patterns.append(f'!content="{item.raw_pattern}"')
+            else:
+                if not found:
+                    return False, ""
+                matched_patterns.append(f'content="{item.raw_pattern}"')
 
         return True, "; ".join(matched_patterns)
 
