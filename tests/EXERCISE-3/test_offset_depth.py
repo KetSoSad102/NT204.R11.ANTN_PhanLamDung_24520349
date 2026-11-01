@@ -129,13 +129,13 @@ def test_t10_offset_exceeds_payload_length_handled_safely():
 def test_t10_end_to_end_pcap_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case10_offset_depth.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case10_offset_depth.rules")))
 
     matcher = RuleMatcher()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher)
     tracker = FlowTracker()
 
-    pcap_path = "TEST/BT3/pcap/case10_offset_depth.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case10_offset_depth.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 2
 

@@ -85,13 +85,13 @@ def test_t05_bidirectional_matches_both_directions():
 def test_t05_end_to_end_pcap_direction_matching():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case05_direction.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case05_direction.rules")))
 
     evaluator = RuleEvaluationEngine(rules=rules)
     tracker = FlowTracker()
 
     detection_events = []
-    for i, captured in enumerate(iter_packets(pcap="TEST/BT3/pcap/case05_direction.pcap"), 1):
+    for i, captured in enumerate(iter_packets(pcap="TEST/EXERCISE-3/pcap/case05_direction.pcap"), 1):
         event = build_event(i, captured, flow_tracker=tracker)
         flow = tracker.get_flow(event.flow_id) if event.flow_id else None
         alerts = evaluator.evaluate_event(event, flow=flow)

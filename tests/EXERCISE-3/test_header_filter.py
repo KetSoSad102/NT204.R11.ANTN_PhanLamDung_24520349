@@ -120,13 +120,13 @@ def test_t07_header_match_proceeds_to_content():
 def test_t07_end_to_end_pcap_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case07_header_filter.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case07_header_filter.rules")))
 
     matcher = RuleMatcher()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher)
     tracker = FlowTracker()
 
-    pcap_path = "TEST/BT3/pcap/case07_header_filter.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case07_header_filter.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 1
 

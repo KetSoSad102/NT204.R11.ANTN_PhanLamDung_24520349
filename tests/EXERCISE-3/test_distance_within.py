@@ -125,13 +125,13 @@ def test_t11_chained_three_content_relative_matches():
 def test_t11_end_to_end_pcap_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case11_distance_within.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case11_distance_within.rules")))
 
     matcher = RuleMatcher()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher)
     tracker = FlowTracker()
 
-    pcap_path = "TEST/BT3/pcap/case11_distance_within.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case11_distance_within.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 2
 

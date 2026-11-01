@@ -4,7 +4,7 @@ from scapy.all import IP, TCP, Raw, wrpcap
 
 
 def main() -> None:
-    output = Path("TEST/BT3/pcap/case05_direction.pcap")
+    output = Path("TEST/EXERCISE-3/pcap/case05_direction.pcap")
 
     p1 = (
         IP(src="192.168.1.100", dst="10.0.0.1")

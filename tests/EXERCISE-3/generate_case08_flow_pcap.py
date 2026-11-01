@@ -35,6 +35,6 @@ def generate_pcap(output_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    pcap_file = Path("TEST/BT3/pcap/case08_flow.pcap")
+    pcap_file = Path("TEST/EXERCISE-3/pcap/case08_flow.pcap")
     generate_pcap(pcap_file)
 

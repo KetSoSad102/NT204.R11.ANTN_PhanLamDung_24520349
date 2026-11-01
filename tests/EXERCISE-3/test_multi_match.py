@@ -111,13 +111,13 @@ def test_t13_detection_events_contain_correct_rule_specific_fields():
 def test_t13_end_to_end_pcap_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case13_multi_match.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case13_multi_match.rules")))
 
     matcher = RuleMatcher()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher)
     tracker = FlowTracker()
 
-    pcap_path = "TEST/BT3/pcap/case13_multi_match.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case13_multi_match.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 2
 

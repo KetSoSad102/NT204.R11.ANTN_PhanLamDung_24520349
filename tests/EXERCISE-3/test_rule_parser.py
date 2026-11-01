@@ -66,7 +66,7 @@ def test_t02_unclosed_quote_and_missing_semicolon():
 
 def test_t02_batch_parsing_continues_on_invalid_rules():
     loader = RuleLoader()
-    raw_rules = loader.load_file(Path("TEST/BT3/rules/case02_syntax_error.rules"))
+    raw_rules = loader.load_file(Path("TEST/EXERCISE-3/rules/case02_syntax_error.rules"))
 
     parser = RuleParser()
     parsed_rules = parser.parse_rules(raw_rules)
@@ -111,7 +111,7 @@ def test_t03_unsupported_protocol_icmp():
 
 def test_t03_batch_parsing_unsupported_rules():
     loader = RuleLoader()
-    raw_rules = loader.load_file(Path("TEST/BT3/rules/case03_unsupported.rules"))
+    raw_rules = loader.load_file(Path("TEST/EXERCISE-3/rules/case03_unsupported.rules"))
 
     parser = RuleParser()
     parsed_rules = parser.parse_rules(raw_rules)
@@ -183,7 +183,7 @@ def test_t04_header_open_port_ranges():
 
 def test_t04_batch_case04_rules_parsed_correctly():
     loader = RuleLoader()
-    raw_rules = loader.load_file(Path("TEST/BT3/rules/case04_headers.rules"))
+    raw_rules = loader.load_file(Path("TEST/EXERCISE-3/rules/case04_headers.rules"))
 
     parser = RuleParser()
     parsed_rules = parser.parse_rules(raw_rules)

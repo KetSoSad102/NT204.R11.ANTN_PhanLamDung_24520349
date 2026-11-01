@@ -18,6 +18,6 @@ def generate_pcap(output_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    pcap_file = Path("TEST/BT3/pcap/case07_header_filter.pcap")
+    pcap_file = Path("TEST/EXERCISE-3/pcap/case07_header_filter.pcap")
     generate_pcap(pcap_file)
 

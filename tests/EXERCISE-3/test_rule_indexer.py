@@ -11,7 +11,7 @@ from ids_rule_engine.parser import RuleParser
 def test_t06_protocol_indexing_tcp_udp_ip():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case06_indexer.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case06_indexer.rules")))
 
     indexer = RuleIndexer(rules=rules)
 
@@ -31,7 +31,7 @@ def test_t06_protocol_indexing_tcp_udp_ip():
 def test_t06_port_filtering_indexer():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case06_indexer.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case06_indexer.rules")))
 
     indexer = RuleIndexer(rules=rules)
 
@@ -69,7 +69,7 @@ def test_t06_port_filtering_indexer():
 def test_t06_get_rule_by_sid():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case06_indexer.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case06_indexer.rules")))
 
     indexer = RuleIndexer(rules=rules)
 
@@ -96,7 +96,7 @@ def test_t06_invalid_rules_ignored_by_indexer():
 def test_t06_evaluator_uses_indexer_properly():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case06_indexer.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case06_indexer.rules")))
 
     indexer = RuleIndexer(rules=rules)
     evaluator = RuleEvaluationEngine(indexer=indexer)

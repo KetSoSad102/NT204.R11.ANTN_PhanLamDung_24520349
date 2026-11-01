@@ -24,7 +24,7 @@ def test_t01_load_from_string_ignores_comments_and_blank_lines():
 
 
 def test_t01_load_file_from_disk():
-    path = Path("TEST/BT3/rules/case01_loader.rules")
+    path = Path("TEST/EXERCISE-3/rules/case01_loader.rules")
     loader = RuleLoader()
     rules = loader.load_rule_strings(path)
 
@@ -37,7 +37,7 @@ def test_t01_load_file_from_disk():
 
 
 def test_t01_disabled_file_config():
-    path = Path("TEST/BT3/rules/case01_loader.rules")
+    path = Path("TEST/EXERCISE-3/rules/case01_loader.rules")
     loader = RuleLoader(disabled_files={"case01_loader.rules"})
     rules = loader.load_rule_strings(path)
 

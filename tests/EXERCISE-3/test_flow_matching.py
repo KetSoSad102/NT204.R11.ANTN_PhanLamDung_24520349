@@ -177,13 +177,13 @@ def test_t08_flow_mismatch_bypasses_content_matching():
 def test_t08_end_to_end_pcap_flow_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case08_flow.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case08_flow.rules")))
 
     matcher = RuleMatcher()
     tracker = FlowTracker()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher, flow_tracker=tracker)
 
-    pcap_path = "TEST/BT3/pcap/case08_flow.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case08_flow.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 5
 

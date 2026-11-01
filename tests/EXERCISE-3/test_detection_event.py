@@ -93,13 +93,13 @@ def test_t14_detection_event_generator_creates_complete_event():
 def test_t14_end_to_end_pcap_detection_event_fields_validation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case14_detection_event.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case14_detection_event.rules")))
 
     matcher = RuleMatcher()
     tracker = FlowTracker()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher, flow_tracker=tracker)
 
-    pcap_path = "TEST/BT3/pcap/case14_detection_event.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case14_detection_event.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 2
 

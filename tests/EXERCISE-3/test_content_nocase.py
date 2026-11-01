@@ -132,13 +132,13 @@ def test_t09_hex_content_with_nocase():
 def test_t09_end_to_end_pcap_evaluation():
     loader = RuleLoader()
     parser = RuleParser()
-    rules = parser.parse_rules(loader.load_file(Path("TEST/BT3/rules/case09_content_nocase.rules")))
+    rules = parser.parse_rules(loader.load_file(Path("TEST/EXERCISE-3/rules/case09_content_nocase.rules")))
 
     matcher = RuleMatcher()
     engine = RuleEvaluationEngine(rules=rules, matcher=matcher)
     tracker = FlowTracker()
 
-    pcap_path = "TEST/BT3/pcap/case09_content_nocase.pcap"
+    pcap_path = "TEST/EXERCISE-3/pcap/case09_content_nocase.pcap"
     packets = list(iter_packets(pcap=pcap_path))
     assert len(packets) == 3
 
