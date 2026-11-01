@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ids_parser.flow_tracker import Flow
 from ids_parser.models import NormalizedEvent
+from ids_rule_engine.indexer import RuleIndexer
 from ids_rule_engine.matcher import MatchResult, RuleMatcher
 from ids_rule_engine.models import DetectionEvent, SnortRule
 
@@ -10,16 +11,21 @@ class RuleEvaluationEngine:
     def __init__(
         self,
         rules: list[SnortRule] | None = None,
+        indexer: RuleIndexer | None = None,
         matcher: RuleMatcher | None = None,
     ):
-        self.rules: list[SnortRule] = rules or []
+        if indexer is not None:
+            self.indexer = indexer
+        else:
+            self.indexer = RuleIndexer(rules=rules or [])
+        self.rules: list[SnortRule] = self.indexer.rules
         self.matcher: RuleMatcher = matcher or RuleMatcher()
         self.events_evaluated: int = 0
         self.candidate_rules_evaluated: int = 0
         self.matches_count: int = 0
 
     def get_candidate_rules(self, event: NormalizedEvent) -> list[SnortRule]:
-        return [r for r in self.rules if r.status == "valid" and r.enabled]
+        return self.indexer.get_candidate_rules(event)
 
     def evaluate_event(
         self,

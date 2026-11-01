@@ -1,0 +1,7 @@
+# Case 06: Indexer test rules
+alert tcp any any -> any 80 (msg:"TCP Port 80"; sid:601; rev:1;)
+alert tcp any any -> any 443 (msg:"TCP Port 443"; sid:602; rev:1;)
+alert udp any any -> any 53 (msg:"UDP DNS"; sid:603; rev:1;)
+alert ip any any -> any any (msg:"IP Any Traffic"; sid:604; rev:1;)
+alert tcp any any -> any any (msg:"TCP Any Traffic"; sid:605; rev:1;)
+

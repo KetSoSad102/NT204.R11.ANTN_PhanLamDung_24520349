@@ -1,0 +1,5 @@
+{"query": "TCP port 80", "candidate_sids": [601, 604, 605], "rules_count": 3}
+{"query": "TCP port 443", "candidate_sids": [602, 604, 605], "rules_count": 3}
+{"query": "UDP port 53", "candidate_sids": [603, 604], "rules_count": 2}
+{"query": "Protocol TCP", "candidate_sids": [601, 602, 604, 605], "rules_count": 4}
+{"query": "Protocol UDP", "candidate_sids": [603, 604], "rules_count": 2}
