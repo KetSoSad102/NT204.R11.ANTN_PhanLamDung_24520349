@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ids_parser.flow_tracker import Flow
+from ids_parser.flow_tracker import Flow, FlowTracker
 from ids_parser.models import NormalizedEvent
 from ids_rule_engine.indexer import RuleIndexer
 from ids_rule_engine.matcher import MatchResult, RuleMatcher
@@ -13,6 +13,7 @@ class RuleEvaluationEngine:
         rules: list[SnortRule] | None = None,
         indexer: RuleIndexer | None = None,
         matcher: RuleMatcher | None = None,
+        flow_tracker: FlowTracker | None = None,
     ):
         if indexer is not None:
             self.indexer = indexer
@@ -20,6 +21,7 @@ class RuleEvaluationEngine:
             self.indexer = RuleIndexer(rules=rules or [])
         self.rules: list[SnortRule] = self.indexer.rules
         self.matcher: RuleMatcher = matcher or RuleMatcher()
+        self.flow_tracker: FlowTracker | None = flow_tracker
         self.events_evaluated: int = 0
         self.candidate_rules_evaluated: int = 0
         self.matches_count: int = 0
@@ -33,6 +35,18 @@ class RuleEvaluationEngine:
         return self.matcher.header_rejections
 
     @property
+    def flow_evaluations(self) -> int:
+        return self.matcher.flow_evaluations
+
+    @property
+    def flow_matches(self) -> int:
+        return self.matcher.flow_matches
+
+    @property
+    def flow_rejections(self) -> int:
+        return self.matcher.flow_rejections
+
+    @property
     def content_evaluations(self) -> int:
         return self.matcher.content_evaluations
 
@@ -44,6 +58,9 @@ class RuleEvaluationEngine:
         event: NormalizedEvent,
         flow: Flow | None = None,
     ) -> list[MatchResult]:
+        if flow is None and self.flow_tracker is not None and event.flow_id:
+            flow = self.flow_tracker.get_flow(event.flow_id)
+
         candidates = self.get_candidate_rules(event)
         results: list[MatchResult] = []
         for rule in candidates:
@@ -56,6 +73,9 @@ class RuleEvaluationEngine:
         flow: Flow | None = None,
     ) -> list[DetectionEvent]:
         self.events_evaluated += 1
+        if flow is None and self.flow_tracker is not None and event.flow_id:
+            flow = self.flow_tracker.get_flow(event.flow_id)
+
         candidates = self.get_candidate_rules(event)
         self.candidate_rules_evaluated += len(candidates)
 

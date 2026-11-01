@@ -1,0 +1,7 @@
+# Case 08: Flow state and direction matching rules
+alert tcp any any -> any 80 (msg:"To Server Established"; flow:to_server, established; content:"EXPLOIT"; sid:801; rev:1;)
+alert tcp any any -> any any (msg:"To Client Established"; flow:to_client, established; content:"RESPONSE"; sid:802; rev:1;)
+alert tcp any any -> any 80 (msg:"Not Established Handshake"; flow:not_established; sid:803; rev:1;)
+alert tcp any any -> any 80 (msg:"To Client Mismatch on Request"; flow:to_client, established; content:"EXPLOIT"; sid:804; rev:1;)
+alert tcp any any -> any 80 (msg:"To Server on Unestablished"; flow:to_server, established; content:"SYN_ATTACK"; sid:805; rev:1;)
+

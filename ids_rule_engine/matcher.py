@@ -45,12 +45,14 @@ class MatchResult:
     matched_info: str = ""
     rejection_reason: str | None = None
     header_matched: bool = False
+    flow_matched: bool = False
     content_evaluated: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "sid": self.sid,
             "header_matched": self.header_matched,
+            "flow_matched": self.flow_matched,
             "content_evaluated": self.content_evaluated,
             "matched": self.matched,
             "rejection_reason": self.rejection_reason,
@@ -63,6 +65,9 @@ class RuleMatcher:
         self.header_evaluations: int = 0
         self.header_matches: int = 0
         self.header_rejections: int = 0
+        self.flow_evaluations: int = 0
+        self.flow_matches: int = 0
+        self.flow_rejections: int = 0
         self.content_evaluations: int = 0
 
     def match_header(self, rule: SnortRule, event: NormalizedEvent) -> bool:
@@ -74,6 +79,52 @@ class RuleMatcher:
         src_port = event.src_port or 0
         dst_port = event.dst_port or 0
         return rule.header.matches(proto, src_ip, src_port, dst_ip, dst_port)
+
+    def match_flow(
+        self,
+        rule: SnortRule,
+        event: NormalizedEvent,
+        flow: Flow | None = None,
+    ) -> tuple[bool, str]:
+        flow_opts = [opt for opt in rule.options if opt.name == "flow"]
+        if not flow_opts:
+            return True, ""
+
+        self.flow_evaluations += 1
+
+        current_state = ""
+        current_direction = ""
+
+        if flow is not None:
+            current_state = flow.state
+            src_ep = f"{event.src_ip}:{event.src_port}"
+            if flow.initiator:
+                current_direction = "to_server" if src_ep == flow.initiator else "to_client"
+
+        if not current_state and event.flow_state:
+            current_state = event.flow_state
+        if not current_direction and event.flow_direction:
+            current_direction = "to_server" if event.flow_direction == "forward" else "to_client"
+
+        for opt in flow_opts:
+            if not opt.value:
+                continue
+            tokens = [t.strip().lower() for t in opt.value.split(",") if t.strip()]
+            for tok in tokens:
+                if tok in ("to_server", "from_client"):
+                    if current_direction != "to_server":
+                        return False, f"flow direction mismatch: expected to_server, got {current_direction}"
+                elif tok in ("to_client", "from_server"):
+                    if current_direction != "to_client":
+                        return False, f"flow direction mismatch: expected to_client, got {current_direction}"
+                elif tok == "established":
+                    if current_state != "ESTABLISHED":
+                        return False, f"flow state mismatch: expected ESTABLISHED, got {current_state}"
+                elif tok == "not_established":
+                    if current_state == "ESTABLISHED":
+                        return False, f"flow state mismatch: expected not_established, got {current_state}"
+
+        return True, "flow=ok"
 
     def match_content(self, rule: SnortRule, event: NormalizedEvent) -> tuple[bool, str]:
         self.content_evaluations += 1
@@ -110,6 +161,7 @@ class RuleMatcher:
                 rule=rule,
                 rejection_reason="invalid_or_disabled",
                 header_matched=False,
+                flow_matched=False,
                 content_evaluated=False,
             )
 
@@ -124,10 +176,29 @@ class RuleMatcher:
                 rule=rule,
                 rejection_reason="header_mismatch",
                 header_matched=False,
+                flow_matched=False,
                 content_evaluated=False,
             )
 
         self.header_matches += 1
+
+        has_flow = any(opt.name == "flow" for opt in rule.options)
+        if has_flow:
+            flow_ok, flow_info = self.match_flow(rule, event, flow=flow)
+            if not flow_ok:
+                self.flow_rejections += 1
+                return MatchResult(
+                    matched=False,
+                    sid=rule.sid,
+                    rev=rule.rev,
+                    msg=rule.msg,
+                    rule=rule,
+                    rejection_reason="flow_mismatch",
+                    header_matched=True,
+                    flow_matched=False,
+                    content_evaluated=False,
+                )
+            self.flow_matches += 1
 
         has_content = any(opt.name == "content" for opt in rule.options)
         if has_content:
@@ -141,6 +212,7 @@ class RuleMatcher:
                     rule=rule,
                     rejection_reason="content_mismatch",
                     header_matched=True,
+                    flow_matched=has_flow,
                     content_evaluated=True,
                 )
             matched_info = content_info
@@ -156,5 +228,6 @@ class RuleMatcher:
             matched_info=matched_info,
             rejection_reason=None,
             header_matched=True,
+            flow_matched=has_flow,
             content_evaluated=has_content,
         )

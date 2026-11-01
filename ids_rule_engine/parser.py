@@ -27,6 +27,15 @@ SUPPORTED_PROTOCOLS = {"TCP", "UDP", "IP"}
 SUPPORTED_ACTIONS = {"ALERT", "LOG", "PASS", "DROP", "REJECT"}
 SUPPORTED_DIRECTIONS = {"->", "<>"}
 KNOWN_UNSUPPORTED_PROTOCOLS = {"ICMP", "HTTP", "DNS", "FTP", "SMTP", "TLS", "SSH"}
+SUPPORTED_FLOW_TOKENS = {
+    "to_server",
+    "to_client",
+    "from_server",
+    "from_client",
+    "established",
+    "not_established",
+    "stateless",
+}
 
 
 def is_valid_ip_or_cidr(ip_str: str) -> bool:
@@ -363,6 +372,30 @@ class RuleParser:
                         file_path=file_path,
                         line_number=line_number,
                     )
+
+            elif opt.name == "flow":
+                if not opt.value or not opt.value.strip():
+                    return SnortRule(
+                        raw_text=raw_text,
+                        header=header,
+                        options=options,
+                        status="invalid",
+                        reason="Empty flow option value",
+                        file_path=file_path,
+                        line_number=line_number,
+                    )
+                flow_tokens = [t.strip().lower() for t in opt.value.split(",") if t.strip()]
+                for tok in flow_tokens:
+                    if tok not in SUPPORTED_FLOW_TOKENS:
+                        return SnortRule(
+                            raw_text=raw_text,
+                            header=header,
+                            options=options,
+                            status="unsupported",
+                            reason=f"Unsupported flow modifier: {tok}",
+                            file_path=file_path,
+                            line_number=line_number,
+                        )
 
         if sid_val is None:
             return SnortRule(
