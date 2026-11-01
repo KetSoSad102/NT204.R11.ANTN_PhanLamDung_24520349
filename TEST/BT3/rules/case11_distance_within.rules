@@ -1,0 +1,7 @@
+# Case 11: Relative content matching with distance and within
+alert tcp any any -> any 80 (msg:"Adjacent Relative Match"; content:"USER"; content:"admin"; distance:1; within:10; sid:1101; rev:1;)
+alert tcp any any -> any 80 (msg:"Within Immediate Match"; content:"KEY="; content:"12345"; within:10; sid:1102; rev:1;)
+alert tcp any any -> any 80 (msg:"Distance Exceeded No Match"; content:"USER"; content:"admin"; distance:20; within:10; sid:1103; rev:1;)
+alert tcp any any -> any 80 (msg:"Within Exceeded No Match"; content:"USER"; content:"admin"; distance:1; within:3; sid:1104; rev:1;)
+alert tcp any any -> any 80 (msg:"Chained Relative Match"; content:"AUTH"; content:"TOKEN="; distance:1; within:10; content:"SUCCESS"; distance:5; within:15; sid:1105; rev:1;)
+

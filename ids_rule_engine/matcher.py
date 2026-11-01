@@ -187,6 +187,8 @@ class RuleMatcher:
         for item in content_items:
             if item.distance is not None:
                 start = last_match_end + item.distance
+            elif item.within is not None:
+                start = last_match_end
             elif item.offset is not None:
                 start = item.offset
             else:
