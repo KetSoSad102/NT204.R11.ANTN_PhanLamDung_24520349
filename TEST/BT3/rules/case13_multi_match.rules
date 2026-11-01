@@ -1,0 +1,7 @@
+# Case 13: Multiple simultaneous rule matches for a single event
+alert tcp any any -> any 80 (msg:"SQL Injection in HTTP Request"; content:"' OR '1'='1"; nocase; priority:1; sid:1301; rev:1;)
+alert tcp any any -> any 80 (msg:"Admin Login Parameter Observed"; content:"user=admin"; nocase; priority:2; sid:1302; rev:1;)
+alert tcp any any -> any 80 (msg:"HTTP GET Request"; content:"GET "; depth:4; priority:3; sid:1303; rev:1;)
+alert tcp any any -> any 80 (msg:"General Inbound Web Traffic"; priority:4; sid:1304; rev:1;)
+alert tcp any any -> any 80 (msg:"HTTP POST Method Expected"; content:"POST "; depth:5; priority:2; sid:1305; rev:1;)
+
