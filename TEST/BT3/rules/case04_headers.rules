@@ -1,0 +1,8 @@
+# Case 04: Header parsing test rules
+alert tcp any any -> any 80 (msg:"HTTP any to 80"; sid:401; rev:1;)
+alert tcp 192.168.1.100 50000 -> 10.0.0.1 80 (msg:"Single IP and Port"; sid:402; rev:1;)
+alert tcp 192.168.1.0/24 1024:65535 -> 10.0.0.0/16 80 (msg:"CIDR and high port range"; sid:403; rev:1;)
+alert udp 10.0.0.5 :1024 -> 8.8.8.8 53 (msg:"UDP lower port range"; sid:404; rev:1;)
+alert tcp 172.16.0.0/12 1024: -> any 443 (msg:"TCP open upper port range"; sid:405; rev:1;)
+alert tcp 192.168.1.10 any <> 192.168.1.20 80 (msg:"Bidirectional communication"; sid:406; rev:1;)
+

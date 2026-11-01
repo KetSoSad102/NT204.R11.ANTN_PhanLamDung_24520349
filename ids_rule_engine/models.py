@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -13,6 +14,50 @@ class RuleHeader:
     direction: str
     dst_ip: str
     dst_port: str
+    src_port_range: tuple[int, int] | None = None
+    dst_port_range: tuple[int, int] | None = None
+
+    def match_ip(self, target_ip: str, rule_ip: str) -> bool:
+        if rule_ip == "any" or not target_ip:
+            return True
+        try:
+            if "/" in rule_ip:
+                net = ipaddress.IPv4Network(rule_ip, strict=False)
+                addr = ipaddress.IPv4Address(target_ip)
+                return addr in net
+            return ipaddress.IPv4Address(target_ip) == ipaddress.IPv4Address(rule_ip)
+        except ValueError:
+            return False
+
+    def match_port(self, target_port: int, port_range: tuple[int, int] | None) -> bool:
+        if port_range is None:
+            return True
+        return port_range[0] <= target_port <= port_range[1]
+
+    def matches(self, packet_proto: str, s_ip: str, s_port: int, d_ip: str, d_port: int) -> bool:
+        proto_up = packet_proto.upper()
+        if self.protocol != "IP" and self.protocol != proto_up:
+            return False
+
+        forward_match = (
+            self.match_ip(s_ip, self.src_ip)
+            and self.match_port(s_port, self.src_port_range)
+            and self.match_ip(d_ip, self.dst_ip)
+            and self.match_port(d_port, self.dst_port_range)
+        )
+        if forward_match:
+            return True
+
+        if self.direction == "<>":
+            backward_match = (
+                self.match_ip(s_ip, self.dst_ip)
+                and self.match_port(s_port, self.dst_port_range)
+                and self.match_ip(d_ip, self.src_ip)
+                and self.match_port(d_port, self.src_port_range)
+            )
+            return backward_match
+
+        return False
 
 
 @dataclass
@@ -60,4 +105,3 @@ class DetectionEvent:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-

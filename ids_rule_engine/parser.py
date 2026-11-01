@@ -65,6 +65,21 @@ def is_valid_port_spec(port_str: str) -> bool:
     return False
 
 
+def parse_port_range(port_str: str) -> tuple[int, int] | None:
+    if port_str == "any":
+        return (0, 65535)
+    if port_str.isdigit():
+        val = int(port_str)
+        return (val, val)
+    if ":" in port_str:
+        parts = port_str.split(":")
+        start_str, end_str = parts[0].strip(), parts[1].strip()
+        start = int(start_str) if start_str else 0
+        end = int(end_str) if end_str else 65535
+        return (start, end)
+    return None
+
+
 def split_rule_options(options_str: str) -> tuple[list[RuleOption] | None, str | None]:
     options: list[RuleOption] = []
     curr: list[str] = []
@@ -253,6 +268,8 @@ class RuleParser:
             direction=direction,
             dst_ip=dst_ip,
             dst_port=dst_port,
+            src_port_range=parse_port_range(src_port),
+            dst_port_range=parse_port_range(dst_port),
         )
 
         options, err = split_rule_options(options_str)
