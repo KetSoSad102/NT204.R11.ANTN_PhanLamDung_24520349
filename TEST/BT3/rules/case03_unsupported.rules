@@ -1,0 +1,9 @@
+# Case 03: Unsupported keywords and protocols
+alert tcp any any -> any 80 (msg:"PCRE rule"; content:"user"; pcre:"/[0-9]{4}/"; sid:201; rev:1;)
+alert tcp any any -> any 80 (msg:"Byte test rule"; byte_test:4,>,100,0; sid:202; rev:1;)
+alert tcp any any -> any 80 (msg:"Byte jump rule"; byte_jump:4,0; sid:203; rev:1;)
+alert icmp any any -> any any (msg:"ICMP Ping"; sid:204; rev:1;)
+alert tcp any any -> any 80 (msg:"Fast pattern rule"; content:"index"; fast_pattern; sid:205; rev:1;)
+alert tcp any any -> any 80 (msg:"Threshold rule"; threshold:type limit,track by_src,count 1,seconds 60; sid:206; rev:1;)
+alert tcp any any -> any 80 (msg:"Valid rule in case 3"; content:"GET"; sid:207; rev:1;)
+
