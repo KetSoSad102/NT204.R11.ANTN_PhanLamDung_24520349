@@ -1,0 +1,6 @@
+{"packet_id": 1, "sid": 701, "msg": "Header Match and Content Match", "header_matched": true, "content_evaluated": true, "matched": true, "rejection_reason": null}
+{"packet_id": 1, "sid": 702, "msg": "IP Mismatch Filtered", "header_matched": false, "content_evaluated": false, "matched": false, "rejection_reason": "header_mismatch"}
+{"packet_id": 1, "sid": 703, "msg": "Port Mismatch Filtered", "header_matched": false, "content_evaluated": false, "matched": false, "rejection_reason": "header_mismatch"}
+{"packet_id": 1, "sid": 704, "msg": "Protocol Mismatch Filtered", "header_matched": false, "content_evaluated": false, "matched": false, "rejection_reason": "header_mismatch"}
+{"packet_id": 1, "sid": 705, "msg": "Direction Mismatch Filtered", "header_matched": false, "content_evaluated": false, "matched": false, "rejection_reason": "header_mismatch"}
+{"timestamp": 1700000000.0, "sid": 701, "rev": 1, "msg": "Header Match and Content Match", "src_ip": "192.168.1.100", "src_port": 54321, "dst_ip": "10.0.0.1", "dst_port": 80, "protocol": "TCP", "priority": null, "classtype": null, "application_protocol": "HTTP", "flow_id": "TCP_10.0.0.1:80_192.168.1.100:54321", "matched_info": "content=\"MALICIOUS_PAYLOAD\"", "event_type": "detection"}

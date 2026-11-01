@@ -24,8 +24,31 @@ class RuleEvaluationEngine:
         self.candidate_rules_evaluated: int = 0
         self.matches_count: int = 0
 
+    @property
+    def header_evaluations(self) -> int:
+        return self.matcher.header_evaluations
+
+    @property
+    def header_rejections(self) -> int:
+        return self.matcher.header_rejections
+
+    @property
+    def content_evaluations(self) -> int:
+        return self.matcher.content_evaluations
+
     def get_candidate_rules(self, event: NormalizedEvent) -> list[SnortRule]:
         return self.indexer.get_candidate_rules(event)
+
+    def evaluate_event_detailed(
+        self,
+        event: NormalizedEvent,
+        flow: Flow | None = None,
+    ) -> list[MatchResult]:
+        candidates = self.get_candidate_rules(event)
+        results: list[MatchResult] = []
+        for rule in candidates:
+            results.append(self.matcher.match(rule, event, flow=flow))
+        return results
 
     def evaluate_event(
         self,
@@ -61,4 +84,3 @@ class RuleEvaluationEngine:
                 detection_events.append(det)
 
         return detection_events
-

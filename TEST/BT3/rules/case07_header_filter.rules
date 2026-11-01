@@ -1,0 +1,7 @@
+# Case 07: Header mismatch filters rule before content inspection
+alert tcp 192.168.1.100 any -> 10.0.0.1 80 (msg:"Header Match and Content Match"; content:"MALICIOUS_PAYLOAD"; sid:701; rev:1;)
+alert tcp 192.168.1.200 any -> 10.0.0.1 80 (msg:"IP Mismatch Filtered"; content:"MALICIOUS_PAYLOAD"; sid:702; rev:1;)
+alert tcp 192.168.1.100 any -> 10.0.0.1 8080 (msg:"Port Mismatch Filtered"; content:"MALICIOUS_PAYLOAD"; sid:703; rev:1;)
+alert udp 192.168.1.100 any -> 10.0.0.1 80 (msg:"Protocol Mismatch Filtered"; content:"MALICIOUS_PAYLOAD"; sid:704; rev:1;)
+alert tcp 10.0.0.1 80 -> 192.168.1.100 any (msg:"Direction Mismatch Filtered"; content:"MALICIOUS_PAYLOAD"; sid:705; rev:1;)
+
