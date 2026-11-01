@@ -1,0 +1,6 @@
+# Case 10: Bounded content search with offset and depth
+alert tcp any any -> any 80 (msg:"Depth Match at Start"; content:"HTTP/"; depth:5; sid:1001; rev:1;)
+alert tcp any any -> any 80 (msg:"Offset Match after Header"; content:"TOKEN="; offset:20; sid:1002; rev:1;)
+alert tcp any any -> any 80 (msg:"Offset and Depth Bounded Match"; content:"SECRET"; offset:10; depth:20; sid:1003; rev:1;)
+alert tcp any any -> any 80 (msg:"Depth Exceeded No Match"; content:"HTTP/"; offset:10; depth:4; sid:1004; rev:1;)
+alert tcp any any -> any 80 (msg:"Pattern Outside Bounded Range"; content:"MALICIOUS"; offset:30; depth:20; sid:1005; rev:1;)

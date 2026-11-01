@@ -182,12 +182,39 @@ class RuleMatcher:
 
         payload = get_event_payload(event)
         matched_patterns: list[str] = []
+        last_match_end = 0
 
         for item in content_items:
-            search_payload = payload.lower() if item.nocase else payload
+            if item.distance is not None:
+                start = last_match_end + item.distance
+            elif item.offset is not None:
+                start = item.offset
+            else:
+                start = 0
+
+            if item.within is not None:
+                end = start + item.within
+            elif item.depth is not None:
+                end = start + item.depth
+            else:
+                end = len(payload)
+
+            start = max(0, start)
+            end = min(len(payload), end)
+
+            if start > len(payload) or start >= end:
+                if item.negated:
+                    matched_patterns.append(f'!content="{item.raw_pattern}"')
+                    continue
+                return False, ""
+
+            window = payload[start:end]
+            search_window = window.lower() if item.nocase else window
             search_pattern = item.pattern.lower() if item.nocase else item.pattern
 
-            found = search_pattern in search_payload
+            idx = search_window.find(search_pattern)
+            found = (idx != -1)
+
             if item.negated:
                 if found:
                     return False, ""
@@ -196,6 +223,7 @@ class RuleMatcher:
                 if not found:
                     return False, ""
                 matched_patterns.append(f'content="{item.raw_pattern}"')
+                last_match_end = start + idx + len(search_pattern)
 
         return True, "; ".join(matched_patterns)
 
