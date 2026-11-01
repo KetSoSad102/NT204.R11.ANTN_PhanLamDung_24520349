@@ -1,0 +1,3 @@
+# Case 14: Comprehensive Detection Event verification rules
+alert tcp any any -> any 80 (msg:"Directory traversal detected"; content:"../"; priority:1; classtype:web-application-attack; sid:140001; rev:1;)
+alert udp any any -> any 53 (msg:"Malicious DNS Query evil.com"; content:"|04|evil|03|com"; priority:2; classtype:bad-unknown; sid:140002; rev:1;)

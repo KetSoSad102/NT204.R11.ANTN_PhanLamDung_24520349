@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ids_parser.flow_tracker import Flow, FlowTracker
 from ids_parser.models import NormalizedEvent
+from ids_rule_engine.generator import DetectionEventGenerator
 from ids_rule_engine.indexer import RuleIndexer
 from ids_rule_engine.matcher import MatchResult, RuleMatcher
 from ids_rule_engine.models import DetectionEvent, SnortRule
@@ -14,6 +15,7 @@ class RuleEvaluationEngine:
         indexer: RuleIndexer | None = None,
         matcher: RuleMatcher | None = None,
         flow_tracker: FlowTracker | None = None,
+        generator: DetectionEventGenerator | None = None,
     ):
         if indexer is not None:
             self.indexer = indexer
@@ -22,6 +24,7 @@ class RuleEvaluationEngine:
         self.rules: list[SnortRule] = self.indexer.rules
         self.matcher: RuleMatcher = matcher or RuleMatcher()
         self.flow_tracker: FlowTracker | None = flow_tracker
+        self.generator: DetectionEventGenerator = generator or DetectionEventGenerator()
         self.events_evaluated: int = 0
         self.candidate_rules_evaluated: int = 0
         self.matches_count: int = 0
@@ -45,6 +48,30 @@ class RuleEvaluationEngine:
     @property
     def flow_rejections(self) -> int:
         return self.matcher.flow_rejections
+
+    @property
+    def flags_evaluations(self) -> int:
+        return self.matcher.flags_evaluations
+
+    @property
+    def flags_matches(self) -> int:
+        return self.matcher.flags_matches
+
+    @property
+    def flags_rejections(self) -> int:
+        return self.matcher.flags_rejections
+
+    @property
+    def dsize_evaluations(self) -> int:
+        return self.matcher.dsize_evaluations
+
+    @property
+    def dsize_matches(self) -> int:
+        return self.matcher.dsize_matches
+
+    @property
+    def dsize_rejections(self) -> int:
+        return self.matcher.dsize_rejections
 
     @property
     def content_evaluations(self) -> int:
@@ -85,22 +112,7 @@ class RuleEvaluationEngine:
             match_res: MatchResult = self.matcher.match(rule, event, flow=flow)
             if match_res.matched:
                 self.matches_count += 1
-                det = DetectionEvent(
-                    timestamp=float(event.timestamp),
-                    sid=match_res.sid or 0,
-                    rev=match_res.rev,
-                    msg=match_res.msg,
-                    priority=rule.priority,
-                    classtype=rule.classtype,
-                    src_ip=event.src_ip or "",
-                    src_port=event.src_port or 0,
-                    dst_ip=event.dst_ip or "",
-                    dst_port=event.dst_port or 0,
-                    protocol=event.transport_protocol or event.network_protocol or "UNKNOWN",
-                    application_protocol=event.application_protocol,
-                    flow_id=event.flow_id,
-                    matched_info=match_res.matched_info,
-                )
+                det = self.generator.generate(rule, match_res, event, flow=flow)
                 detection_events.append(det)
 
         return detection_events
