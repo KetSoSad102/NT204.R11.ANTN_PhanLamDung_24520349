@@ -35,6 +35,61 @@ def get_event_payload(event: NormalizedEvent) -> bytes:
     return b""
 
 
+def match_tcp_flags(spec: str, event_flags: str | None) -> bool:
+    s = spec.strip().upper()
+    act = set(event_flags.upper()) if event_flags else set()
+
+    if "!" in s:
+        target = set(s.replace("!", "").strip())
+        return not any(f in act for f in target)
+    elif "*" in s:
+        target = set(s.replace("*", "").strip())
+        return any(f in act for f in target)
+    elif "+" in s:
+        target = set(s.replace("+", "").strip())
+        return target.issubset(act)
+    else:
+        if s == "0":
+            return len(act) == 0
+        target = set(s)
+        return target == act
+
+
+def match_packet_dsize(spec: str, actual_size: int) -> bool:
+    s = spec.strip()
+    if "<>" in s:
+        negated = False
+        if s.startswith("!"):
+            negated = True
+            s = s[1:].strip()
+        parts = s.split("<>")
+        low = int(parts[0].strip())
+        high = int(parts[1].strip())
+        in_range = (low <= actual_size <= high)
+        return not in_range if negated else in_range
+    elif s.startswith(">="):
+        target = int(s[2:].strip())
+        return actual_size >= target
+    elif s.startswith("<="):
+        target = int(s[2:].strip())
+        return actual_size <= target
+    elif s.startswith(">"):
+        target = int(s[1:].strip())
+        return actual_size > target
+    elif s.startswith("<"):
+        target = int(s[1:].strip())
+        return actual_size < target
+    elif s.startswith("!="):
+        target = int(s[2:].strip())
+        return actual_size != target
+    elif s.startswith("!"):
+        target = int(s[1:].strip())
+        return actual_size != target
+    else:
+        target = int(s)
+        return actual_size == target
+
+
 @dataclass
 class ContentOption:
     pattern: bytes
@@ -94,6 +149,8 @@ class MatchResult:
     rejection_reason: str | None = None
     header_matched: bool = False
     flow_matched: bool = False
+    flags_matched: bool = True
+    dsize_matched: bool = True
     content_evaluated: bool = False
 
     def to_dict(self) -> dict[str, Any]:
@@ -101,6 +158,8 @@ class MatchResult:
             "sid": self.sid,
             "header_matched": self.header_matched,
             "flow_matched": self.flow_matched,
+            "flags_matched": self.flags_matched,
+            "dsize_matched": self.dsize_matched,
             "content_evaluated": self.content_evaluated,
             "matched": self.matched,
             "rejection_reason": self.rejection_reason,
@@ -116,6 +175,12 @@ class RuleMatcher:
         self.flow_evaluations: int = 0
         self.flow_matches: int = 0
         self.flow_rejections: int = 0
+        self.flags_evaluations: int = 0
+        self.flags_matches: int = 0
+        self.flags_rejections: int = 0
+        self.dsize_evaluations: int = 0
+        self.dsize_matches: int = 0
+        self.dsize_rejections: int = 0
         self.content_evaluations: int = 0
 
     def match_header(self, rule: SnortRule, event: NormalizedEvent) -> bool:
@@ -173,6 +238,32 @@ class RuleMatcher:
                         return False, f"flow state mismatch: expected not_established, got {current_state}"
 
         return True, "flow=ok"
+
+    def match_flags(self, rule: SnortRule, event: NormalizedEvent) -> tuple[bool, str]:
+        flags_opts = [opt for opt in rule.options if opt.name == "flags"]
+        if not flags_opts:
+            return True, ""
+        self.flags_evaluations += 1
+        for opt in flags_opts:
+            if not opt.value:
+                continue
+            if not match_tcp_flags(opt.value, event.tcp_flags):
+                return False, f"flags mismatch: expected {opt.value}, got {event.tcp_flags}"
+        return True, "flags=ok"
+
+    def match_dsize(self, rule: SnortRule, event: NormalizedEvent) -> tuple[bool, str]:
+        dsize_opts = [opt for opt in rule.options if opt.name == "dsize"]
+        if not dsize_opts:
+            return True, ""
+        self.dsize_evaluations += 1
+        payload = get_event_payload(event)
+        payload_len = len(payload)
+        for opt in dsize_opts:
+            if not opt.value:
+                continue
+            if not match_packet_dsize(opt.value, payload_len):
+                return False, f"dsize mismatch: expected {opt.value}, got {payload_len}"
+        return True, "dsize=ok"
 
     def match_content(self, rule: SnortRule, event: NormalizedEvent) -> tuple[bool, str]:
         self.content_evaluations += 1
@@ -283,6 +374,45 @@ class RuleMatcher:
                 )
             self.flow_matches += 1
 
+        has_flags = any(opt.name == "flags" for opt in rule.options)
+        if has_flags:
+            flags_ok, _ = self.match_flags(rule, event)
+            if not flags_ok:
+                self.flags_rejections += 1
+                return MatchResult(
+                    matched=False,
+                    sid=rule.sid,
+                    rev=rule.rev,
+                    msg=rule.msg,
+                    rule=rule,
+                    rejection_reason="flags_mismatch",
+                    header_matched=True,
+                    flow_matched=has_flow,
+                    flags_matched=False,
+                    content_evaluated=False,
+                )
+            self.flags_matches += 1
+
+        has_dsize = any(opt.name == "dsize" for opt in rule.options)
+        if has_dsize:
+            dsize_ok, _ = self.match_dsize(rule, event)
+            if not dsize_ok:
+                self.dsize_rejections += 1
+                return MatchResult(
+                    matched=False,
+                    sid=rule.sid,
+                    rev=rule.rev,
+                    msg=rule.msg,
+                    rule=rule,
+                    rejection_reason="dsize_mismatch",
+                    header_matched=True,
+                    flow_matched=has_flow,
+                    flags_matched=has_flags,
+                    dsize_matched=False,
+                    content_evaluated=False,
+                )
+            self.dsize_matches += 1
+
         has_content = any(opt.name == "content" for opt in rule.options)
         if has_content:
             content_matched, content_info = self.match_content(rule, event)
@@ -296,6 +426,8 @@ class RuleMatcher:
                     rejection_reason="content_mismatch",
                     header_matched=True,
                     flow_matched=has_flow,
+                    flags_matched=has_flags,
+                    dsize_matched=has_dsize,
                     content_evaluated=True,
                 )
             matched_info = content_info
@@ -312,5 +444,7 @@ class RuleMatcher:
             rejection_reason=None,
             header_matched=True,
             flow_matched=has_flow,
+            flags_matched=has_flags,
+            dsize_matched=has_dsize,
             content_evaluated=has_content,
         )

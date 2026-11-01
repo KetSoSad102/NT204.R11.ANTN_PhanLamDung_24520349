@@ -1,0 +1,7 @@
+# Case 12: Packet/TCP flags and dsize matching rules
+alert tcp any any -> any 80 (msg:"TCP SYN with No Payload"; flags:S; dsize:0; sid:1201; rev:1;)
+alert tcp any any -> any 80 (msg:"TCP Push-Ack with Large Payload"; flags:PA; dsize:>50; sid:1202; rev:1;)
+alert tcp any any -> any 80 (msg:"TCP Payload in Size Range"; flags:PA; dsize:20<>60; sid:1203; rev:1;)
+alert tcp any any -> any 80 (msg:"Flags Mismatch Not Syn"; flags:S; sid:1204; rev:1;)
+alert tcp any any -> any 80 (msg:"Dsize Exceeded No Match"; flags:PA; dsize:<20; sid:1205; rev:1;)
+

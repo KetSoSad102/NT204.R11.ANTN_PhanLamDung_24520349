@@ -397,6 +397,30 @@ class RuleParser:
                             line_number=line_number,
                         )
 
+            elif opt.name == "flags":
+                if not opt.value or not opt.value.strip():
+                    return SnortRule(
+                        raw_text=raw_text,
+                        header=header,
+                        options=options,
+                        status="invalid",
+                        reason="Empty flags option value",
+                        file_path=file_path,
+                        line_number=line_number,
+                    )
+
+            elif opt.name == "dsize":
+                if not opt.value or not opt.value.strip():
+                    return SnortRule(
+                        raw_text=raw_text,
+                        header=header,
+                        options=options,
+                        status="invalid",
+                        reason="Empty dsize option value",
+                        file_path=file_path,
+                        line_number=line_number,
+                    )
+
         if sid_val is None:
             return SnortRule(
                 raw_text=raw_text,
